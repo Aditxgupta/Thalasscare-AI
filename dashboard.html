@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThalassCare AI </title>
+    
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'thalass-primary': '#DC2626',
+                        'thalass-secondary': '#1E40AF',
+                        'thalass-accent': '#059669',
+                        'thalass-dark': '#1F2937',
+                        'thalass-light': '#F8FAFC'
+                    },
+                    fontFamily: {
+                        'professional': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #DC2626 0%, #1E40AF 100%);
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #DC2626;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+    <!-- Header Navigation -->
+    <nav class="gradient-bg shadow-xl">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-thalass-primary" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">ThalassCare AI</h1>
+                        <p class="text-blue-100 text-sm">Intelligent Blood Management Platform</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <span class="text-white text-sm opacity-90" id="current-time"></span>
+                    <div class="w-3 h-3 bg-green-400 rounded-full pulse-animation"></div>
+                    <span class="text-green-200 text-sm font-medium">Live Data</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Loading Section -->
+        <div id="loader" class="text-center py-20">
+            <div class="bg-white rounded-2xl shadow-xl p-12 max-w-md mx-auto">
+                <div class="spinner mx-auto mb-6"></div>
+                <h3 class="text-xl font-semibold text-thalass-dark mb-2">Initializing ThalassCare AI</h3>
+                <p class="text-gray-600">Loading donor analytics and real-time data...</p>
+                <div class="mt-4 bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div class="bg-thalass-primary h-full rounded-full animate-pulse" style="width: 65%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Content -->
+        <div id="dashboard-content" class="hidden fade-in">
+            <!-- Executive Summary -->
+            <div class="mb-8">
+                <div class="bg-white rounded-2xl shadow-xl p-8 border-l-4 border-thalass-primary">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold text-thalass-dark">Executive Dashboard</h2>
+                        <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                            System Operational
+                        </span>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed">
+                        Real-time analytics and insights for optimized blood donation management. 
+                        Monitor donor eligibility, track donation patterns, and ensure efficient resource allocation.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Enhanced KPI Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+                <!-- Total Donors Card -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 card-hover border-l-4 border-thalass-primary">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Donors</p>
+                            <p id="total-donors" class="text-3xl font-bold text-thalass-primary mt-2">0</p>
+                            <p class="text-green-600 text-sm mt-1">
+                                <span class="font-medium">↗ Active Registry</span>
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-thalass-primary" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eligible Donors Card -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 card-hover border-l-4 border-thalass-accent">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Eligible Donors</p>
+                            <p id="eligible-donors" class="text-3xl font-bold text-thalass-accent mt-2">0</p>
+                            <p class="text-green-600 text-sm mt-1">
+                                <span class="font-medium">Ready to Donate</span>
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-thalass-accent" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Annual Donations Card -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 card-hover border-l-4 border-thalass-secondary">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">2025 Donations</p>
+                            <p id="donations-this-year" class="text-3xl font-bold text-thalass-secondary mt-2">0</p>
+                            <p class="text-blue-600 text-sm mt-1">
+                                <span class="font-medium">This Year</span>
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-thalass-secondary" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dominant Blood Type Card -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 card-hover border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Dominant Type</p>
+                            <p id="common-blood-type" class="text-3xl font-bold text-purple-600 mt-2">-</p>
+                            <p class="text-purple-600 text-sm mt-1">
+                                <span class="font-medium">Most Common</span>
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+                <!-- Blood Group Distribution -->
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-thalass-dark">Blood Group Distribution</h3>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                            <span class="text-sm text-gray-600">Live Data</span>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <canvas id="bloodGroupChart" class="max-h-80"></canvas>
+                    </div>
+                </div>
+
+                <!-- Role Distribution -->
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-thalass-dark">User Role Analytics</h3>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
+                            <span class="text-sm text-gray-600">Updated</span>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <canvas id="donorRoleChart" class="max-h-80"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Analytics Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Eligibility Status Overview -->
+                <div class="bg-white rounded-2xl shadow-xl p-6">
+                    <h4 class="text-lg font-semibold text-thalass-dark mb-4">Eligibility Overview</h4>
+                    <div id="eligibility-breakdown" class="space-y-3">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-2xl shadow-xl p-6">
+                    <h4 class="text-lg font-semibold text-thalass-dark mb-4">Quick Actions</h4>
+                    <div class="space-y-3">
+                        <button class="w-full px-4 py-3 bg-thalass-primary text-white rounded-xl hover:bg-red-700 transition-colors font-medium">
+                            Schedule Drive
+                        </button>
+                        <button onclick="window.location.href='gist_analyzer.html'" class="w-full px-4 py-3 bg-thalass-secondary text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                            Generate Report
+                        </button>
+                        <button onclick="window.location.href='patient_dashboard.html'" class="w-full px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium">
+                            Patient Dashboard
+                        </button>
+                        <button onclick="window.open('http://localhost:8501', '_blank')" class="w-full px-4 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors font-medium">
+                            🧠 Blood Supply Prediction
+                        </button>
+                        <a href="/streamlit" target="_blank"></a>
+                            <button class="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium">
+                                💬 Thalassemia AI Chatbot
+                            </button>
+                        </a>
+                        <button onclick="window.location.href='contact_donors.html'" class="w-full px-4 py-3 bg-thalass-accent text-white rounded-xl hover:bg-green-700 transition-colors font-medium">
+                            Contact Donors
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Status -->
+                <div class="bg-white rounded-2xl shadow-xl p-6">
+                    <h4 class="text-lg font-semibold text-thalass-dark mb-4">System Status</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Database</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Online</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">API Status</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Active</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Last Sync</span>
+                            <span class="text-xs text-gray-500" id="last-sync">Just now</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-thalass-dark text-white py-8 mt-16">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-3 mb-4 md:mb-0">
+                    <div class="w-8 h-8 bg-thalass-primary rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <span class="font-semibold">ThalassCare AI</span>
+                </div>
+                <p class="text-gray-400 text-sm">© 2025 ThalassCare AI. Powered by intelligent analytics.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            CSV_URL: 'https://gist.githubusercontent.com/Aditxgupta/701609bb8c60546f77a3b396e3f94de8/raw/8c0cc34154730c72fcb7b94b6f1fe9fa5810c233/gistfile1.txt',
+            CHART_COLORS: {
+                primary: ['#DC2626', '#1E40AF', '#059669', '#7C3AED', '#EA580C', '#DB2777', '#0891B2', '#65A30D'],
+                background: ['rgba(220, 38, 38, 0.8)', 'rgba(30, 64, 175, 0.8)', 'rgba(5, 150, 105, 0.8)', 'rgba(124, 58, 237, 0.8)', 'rgba(234, 88, 12, 0.8)', 'rgba(219, 39, 119, 0.8)', 'rgba(8, 145, 178, 0.8)', 'rgba(101, 163, 13, 0.8)']
+            }
+        };
+
+        // DOM Elements
+        const loader = document.getElementById('loader');
+        const dashboardContent = document.getElementById('dashboard-content');
+
+        // Initialize real-time clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleString('en-US', {
+                timeZone: 'Asia/Kolkata',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('current-time').textContent = timeString;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Enhanced data loading with better error handling
+        async function loadThalassCareData() {
+            try {
+                showLoadingProgress(25);
+                
+                const response = await fetch(CONFIG.CSV_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                showLoadingProgress(50);
+                const csvText = await response.text();
+                
+                if (!csvText.trim()) {
+                    throw new Error('CSV file appears to be empty');
+                }
+                
+                showLoadingProgress(75);
+
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        if (results.errors.length > 0) {
+                            console.warn('CSV parsing warnings:', results.errors);
+                        }
+                        
+                        if (!results.data || results.data.length === 0) {
+                            throw new Error('No valid data found in CSV file');
+                        }
+                        
+                        showLoadingProgress(100);
+                        
+                        setTimeout(() => {
+                            processAnalytics(results.data);
+                            showDashboard();
+                        }, 500);
+                    },
+                    error: function(err) {
+                        throw new Error(`CSV parsing failed: ${err.message}`);
+                    }
+                });
+
+            } catch (error) {
+                console.error('ThalassCare Data Loading Error:', error);
+                showErrorState(error.message);
+            }
+        }
+
+        function showLoadingProgress(percentage) {
+            const progressBar = document.querySelector('.bg-thalass-primary');
+            if (progressBar) {
+                progressBar.style.width = `${percentage}%`;
+            }
+        }
+
+        function showErrorState(errorMessage) {
+            loader.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-xl p-12 max-w-md mx-auto border-l-4 border-red-500">
+                    <div class="text-center">
+                        <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <h3 class="text-xl font-bold text-red-600 mb-2">Connection Error</h3>
+                        <p class="text-gray-600 mb-4">${errorMessage}</p>
+                        <button onclick="location.reload()" class="px-6 py-2 bg-thalass-primary text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                            Retry Connection
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showDashboard() {
+            loader.classList.add('hidden');
+            dashboardContent.classList.remove('hidden');
+            document.getElementById('last-sync').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Enhanced analytics processing
+        function processAnalytics(data) {
+            try {
+                // Calculate comprehensive metrics
+                const analytics = calculateMetrics(data);
+                updateKPICards(analytics);
+                createEnhancedCharts(analytics);
+                updateEligibilityBreakdown(analytics.eligibilityStats);
+                
+            } catch (error) {
+                console.error('Analytics processing error:', error);
+            }
+        }
+
+        function calculateMetrics(data) {
+            // Basic metrics
+            const uniqueDonors = new Set(data.map(row => row.user_id?.toString().trim()).filter(id => id));
+            const eligibleDonors = data.filter(row => row.eligibility_status?.toLowerCase().trim() === 'eligible');
+            
+            // Current year donations
+            const currentYear = new Date().getFullYear();
+            const donationsThisYear = data.filter(row => {
+                if (!row.last_donation_date) return false;
+                const donationDate = new Date(row.last_donation_date);
+                return !isNaN(donationDate) && donationDate.getFullYear() === currentYear;
+            });
+
+            // Blood group analysis
+            const bloodGroupStats = data.reduce((acc, row) => {
+                const group = row.blood_group?.trim();
+                if (group && group !== '') {
+                    acc[group] = (acc[group] || 0) + 1;
+                }
+                return acc;
+            }, {});
+
+            // Role distribution
+            const roleStats = data.reduce((acc, row) => {
+                const role = row.role?.trim();
+                if (role && role !== '') {
+                    acc[role] = (acc[role] || 0) + 1;
+                }
+                return acc;
+            }, {});
+
+            // Eligibility breakdown
+            const eligibilityStats = data.reduce((acc, row) => {
+                const status = row.eligibility_status?.toLowerCase().trim();
+                if (status && status !== '') {
+                    acc[status] = (acc[status] || 0) + 1;
+                }
+                return acc;
+            }, {});
+
+            // Find most common blood type
+            const commonBloodType = Object.keys(bloodGroupStats).reduce((a, b) => 
+                bloodGroupStats[a] > bloodGroupStats[b] ? a : b, 'N/A');
+
+            return {
+                totalDonors: uniqueDonors.size,
+                eligibleDonors: eligibleDonors.length,
+                donationsThisYear: donationsThisYear.length,
+                commonBloodType,
+                bloodGroupStats,
+                roleStats,
+                eligibilityStats
+            };
+        }
+
+        function updateKPICards(analytics) {
+            document.getElementById('total-donors').textContent = analytics.totalDonors.toLocaleString();
+            document.getElementById('eligible-donors').textContent = analytics.eligibleDonors.toLocaleString();
+            document.getElementById('donations-this-year').textContent = analytics.donationsThisYear.toLocaleString();
+            document.getElementById('common-blood-type').textContent = analytics.commonBloodType;
+        }
+
+        function updateEligibilityBreakdown(eligibilityStats) {
+            const container = document.getElementById('eligibility-breakdown');
+            container.innerHTML = '';
+
+            Object.entries(eligibilityStats).forEach(([status, count]) => {
+                const percentage = ((count / Object.values(eligibilityStats).reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+                const statusColor = status === 'eligible' ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50';
+                
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-3 rounded-lg ${statusColor}">
+                        <span class="text-sm font-medium capitalize">${status}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-semibold">${count}</span>
+                            <span class="text-xs opacity-75">(${percentage}%)</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function createEnhancedCharts(analytics) {
+            createBloodGroupChart(analytics.bloodGroupStats);
+            createRoleChart(analytics.roleStats);
+        }
+
+        function createBloodGroupChart(bloodGroupStats) {
+            const ctx = document.getElementById('bloodGroupChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(bloodGroupStats),
+                    datasets: [{
+                        label: 'Donors by Blood Group',
+                        data: Object.values(bloodGroupStats),
+                        backgroundColor: CONFIG.CHART_COLORS.background,
+                        borderColor: CONFIG.CHART_COLORS.primary,
+                        borderWidth: 3,
+                        hoverBorderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: { size: 12, weight: '500' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1
+                        }
+                    },
+                    cutout: '65%',
+                    animation: {
+                        animateRotate: true,
+                        duration: 2000
+                    }
+                }
+            });
+        }
+
+        function createRoleChart(roleStats) {
+            const ctx = document.getElementById('donorRoleChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(roleStats),
+                    datasets: [{
+                        label: 'Users by Role',
+                        data: Object.values(roleStats),
+                        backgroundColor: CONFIG.CHART_COLORS.background[1],
+                        borderColor: CONFIG.CHART_COLORS.primary,
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                            ticks: { font: { size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 } }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // Initialize ThalassCare AI Platform
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🩸 ThalassCare AI Platform Initializing...');
+            loadThalassCareData();
+        });
+    </script>
+</body>
+</html>

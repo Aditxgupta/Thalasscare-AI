@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Gist Analyzer - ThalassCare AI</title>
+    
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'thalass-primary': '#DC2626',
+                        'thalass-secondary': '#1E40AF',
+                        'thalass-accent': '#059669',
+                        'thalass-dark': '#1F2937',
+                        'thalass-light': '#F8FAFC'
+                    },
+                    fontFamily: {
+                        'professional': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #DC2626 0%, #1E40AF 100%);
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #DC2626;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .insights-card {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+    <!-- Header Navigation -->
+    <nav class="gradient-bg shadow-xl">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-thalass-primary" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">GitHub Gist Analyzer</h1>
+                        <p class="text-blue-100 text-sm">AI-Powered Code Analysis & Summary</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="dashobard .html" class="text-white hover:text-blue-200 transition-colors font-medium">
+                        ← Back to Dashboard
+                    </a>
+                    <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                    <span class="text-green-200 text-sm font-medium">AI Ready</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Input Section -->
+        <div class="mb-8">
+            <div class="bg-white rounded-2xl shadow-xl p-8 border-l-4 border-thalass-primary">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-thalass-dark">GitHub Gist Analysis</h2>
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-6 h-6 text-thalass-primary" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-600">Powered by OpenAI</span>
+                    </div>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="font-medium text-blue-800">Pre-configured Gist</span>
+                            </div>
+                            <p class="text-sm text-blue-700 mb-3">
+                                Analyzing: <code class="bg-blue-100 px-2 py-1 rounded text-xs">https://gist.github.com/Aditxgupta/701609bb8c60546f77a3b396e3f94de8</code>
+                            </p>
+                            <button 
+                                id="analyze-btn" 
+                                class="px-8 py-3 bg-thalass-primary text-white rounded-xl hover:bg-red-700 transition-colors font-medium flex items-center space-x-2"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                                <span>Generate Analysis</span>
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-500">
+                            Click "Generate Analysis" to analyze the pre-configured GitHub Gist and generate AI-powered insights
+                        </p>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="include-code" class="rounded border-gray-300 text-thalass-primary focus:ring-thalass-primary" checked>
+                            <label for="include-code" class="text-sm text-gray-700">Include code in analysis</label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="detailed-analysis" class="rounded border-gray-300 text-thalass-primary focus:ring-thalass-primary">
+                            <label for="detailed-analysis" class="text-sm text-gray-700">Detailed analysis</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-12 text-center">
+                <div class="spinner mx-auto mb-6"></div>
+                <h3 class="text-xl font-semibold text-thalass-dark mb-2">Analyzing GitHub Gist</h3>
+                <p class="text-gray-600">Processing code and generating AI-powered insights...</p>
+                <div class="mt-4 bg-gray-200 rounded-full h-2 overflow-hidden max-w-md mx-auto">
+                    <div class="bg-thalass-primary h-full rounded-full animate-pulse" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="hidden fade-in">
+            <!-- Summary Card -->
+            <div class="mb-8">
+                <div class="summary-card rounded-2xl shadow-xl p-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-amber-800">AI Summary</h3>
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="text-sm text-amber-700 font-medium">Generated by AI</span>
+                        </div>
+                    </div>
+                    <div id="summary-content" class="text-amber-900 leading-relaxed">
+                        <!-- Summary will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Code Analysis -->
+                <div class="insights-card rounded-2xl shadow-xl p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h4 class="text-lg font-bold text-blue-800">Code Analysis</h4>
+                        <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div id="code-analysis" class="text-blue-900 space-y-4">
+                        <!-- Code analysis will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Technical Insights -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 border-l-4 border-thalass-accent">
+                    <div class="flex items-center justify-between mb-6">
+                        <h4 class="text-lg font-bold text-thalass-dark">Technical Insights</h4>
+                        <svg class="w-6 h-6 text-thalass-accent" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div id="technical-insights" class="text-thalass-dark space-y-4">
+                        <!-- Technical insights will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Original Code Display -->
+            <div class="mb-8">
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h4 class="text-lg font-bold text-thalass-dark">Original Code</h4>
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="text-sm text-gray-600" id="file-info">Source: GitHub Gist</span>
+                        </div>
+                    </div>
+                    <div id="original-code" class="code-block text-sm">
+                        <!-- Original code will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center space-x-4">
+                <button id="download-report" class="px-6 py-3 bg-thalass-secondary text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span>Download Report</span>
+                </button>
+                <button id="new-analysis" class="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors font-medium flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>New Analysis</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-12 text-center border-l-4 border-red-500">
+                <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <h3 class="text-xl font-bold text-red-600 mb-2">Analysis Failed</h3>
+                <p id="error-message" class="text-gray-600 mb-4">An error occurred while analyzing the gist.</p>
+                <button onclick="resetAnalysis()" class="px-6 py-2 bg-thalass-primary text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                    Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-thalass-dark text-white py-8 mt-16">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-3 mb-4 md:mb-0">
+                    <div class="w-8 h-8 bg-thalass-primary rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <span class="font-semibold">ThalassCare AI</span>
+                </div>
+                <p class="text-gray-400 text-sm">© 2025 ThalassCare AI. Powered by OpenAI GPT-4.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Pre-configured gist URL - using the regular gist URL instead of raw URL
+        const PREDEFINED_GIST_URL = 'https://gist.github.com/Aditxgupta/701609bb8c60546f77a3b396e3f94de8';
+        
+        // DOM Elements
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const loadingState = document.getElementById('loading-state');
+        const resultsSection = document.getElementById('results-section');
+        const errorState = document.getElementById('error-state');
+        const summaryContent = document.getElementById('summary-content');
+        const codeAnalysis = document.getElementById('code-analysis');
+        const technicalInsights = document.getElementById('technical-insights');
+        const originalCode = document.getElementById('original-code');
+        const fileInfo = document.getElementById('file-info');
+        const downloadReportBtn = document.getElementById('download-report');
+        const newAnalysisBtn = document.getElementById('new-analysis');
+
+        // Analysis state
+        let currentAnalysis = null;
+
+        // Event Listeners
+        analyzeBtn.addEventListener('click', analyzeGist);
+        downloadReportBtn.addEventListener('click', downloadReport);
+        newAnalysisBtn.addEventListener('click', resetAnalysis);
+
+                async function analyzeGist() {
+            console.log('🔍 Starting analysis of pre-configured gist...');
+            console.log('📋 Gist URL:', PREDEFINED_GIST_URL);
+            
+            try {
+                showLoading();
+                console.log('✅ Loading state shown');
+                
+                // Check if checkboxes exist
+                const includeCodeCheckbox = document.getElementById('include-code');
+                const detailedAnalysisCheckbox = document.getElementById('detailed-analysis');
+                
+                if (!includeCodeCheckbox || !detailedAnalysisCheckbox) {
+                    throw new Error('Required checkboxes not found');
+                }
+                
+                const requestData = {
+                    gist_url: PREDEFINED_GIST_URL,
+                    include_code: includeCodeCheckbox.checked,
+                    detailed_analysis: detailedAnalysisCheckbox.checked
+                };
+                
+                console.log('📤 Sending request:', requestData);
+                
+                // Test if fetch is available
+                if (typeof fetch === 'undefined') {
+                    throw new Error('Fetch API not available');
+                }
+                
+                console.log('✅ Fetch API available, making request...');
+                
+                const response = await fetch('/analyze-gist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                console.log('📥 Response status:', response.status);
+                console.log('📥 Response ok:', response.ok);
+
+                const data = await response.json();
+                console.log('📥 Response data keys:', Object.keys(data));
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to analyze gist');
+                }
+
+                currentAnalysis = data;
+                showResults(data);
+                
+            } catch (error) {
+                console.error('❌ Analysis error:', error);
+                console.error('❌ Error type:', error.constructor.name);
+                console.error('❌ Error stack:', error.stack);
+                
+                // More robust error message handling
+                let errorMessage = 'Unknown error occurred';
+                if (error && typeof error === 'object') {
+                    if (error.message) {
+                        errorMessage = error.message;
+                    } else if (error.constructor && error.constructor.name) {
+                        errorMessage = `${error.constructor.name}: ${error.toString()}`;
+                    } else {
+                        errorMessage = error.toString();
+                    }
+                } else if (typeof error === 'string') {
+                    errorMessage = error;
+                }
+                
+                showError(errorMessage);
+            }
+        }
+
+
+
+        function showLoading() {
+            loadingState.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            errorState.classList.add('hidden');
+        }
+
+        function showResults(data) {
+            console.log('🔍 showResults called with data:', data);
+            console.log('🔍 Data keys:', Object.keys(data));
+            
+            try {
+                loadingState.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+                errorState.classList.add('hidden');
+                console.log('✅ UI states updated');
+
+                // Update summary
+                console.log('🔍 Updating summary with:', typeof data.summary, data.summary ? data.summary.length : 'null');
+                summaryContent.innerHTML = formatMarkdown(data.summary);
+                console.log('✅ Summary updated');
+
+                // Update code analysis
+                console.log('🔍 Updating code analysis with:', typeof data.code_analysis, data.code_analysis ? data.code_analysis.length : 'null');
+                codeAnalysis.innerHTML = formatMarkdown(data.code_analysis);
+                console.log('✅ Code analysis updated');
+
+                // Update technical insights
+                console.log('🔍 Updating technical insights with:', typeof data.technical_insights, data.technical_insights ? data.technical_insights.length : 'null');
+                technicalInsights.innerHTML = formatMarkdown(data.technical_insights);
+                console.log('✅ Technical insights updated');
+
+                // Update original code
+                console.log('🔍 Updating original code with:', typeof data.original_code, data.original_code ? data.original_code.length : 'null');
+                originalCode.textContent = data.original_code || 'No code content available';
+                console.log('✅ Original code updated');
+                
+                // Update file info
+                console.log('🔍 Updating file info with gist_url:', data.gist_url, 'file_count:', data.file_count);
+                fileInfo.textContent = `Source: ${data.gist_url} | Files: ${data.file_count || 1}`;
+                console.log('✅ File info updated');
+
+                // Scroll to results
+                console.log('🔍 Scrolling to results...');
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+                console.log('✅ showResults completed successfully');
+                
+            } catch (error) {
+                console.error('❌ Error in showResults:', error);
+                console.error('❌ Error stack:', error.stack);
+                showError(`Error displaying results: ${error.message}`);
+            }
+        }
+
+        function showError(message) {
+            console.log('🔍 showError called with message:', message);
+            console.log('🔍 Error state element:', errorState);
+            console.log('🔍 Error message element:', document.getElementById('error-message'));
+            
+            try {
+                loadingState.classList.add('hidden');
+                resultsSection.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                
+                const errorMessageElement = document.getElementById('error-message');
+                if (errorMessageElement) {
+                    errorMessageElement.textContent = message;
+                    console.log('✅ Error message set successfully');
+                } else {
+                    console.error('❌ Error message element not found');
+                }
+            } catch (error) {
+                console.error('❌ Error in showError function:', error);
+            }
+        }
+
+        function resetAnalysis() {
+            loadingState.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            errorState.classList.add('hidden');
+            currentAnalysis = null;
+        }
+
+        function formatMarkdown(text) {
+            console.log('🔍 formatMarkdown called with:', typeof text, text ? text.length : 'null/undefined');
+            
+            if (!text || typeof text !== 'string') {
+                console.log('⚠️ formatMarkdown: returning empty string for invalid input');
+                return '';
+            }
+            
+            try {
+                // Simple markdown formatting
+                const result = text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>')
+                    .replace(/\n/g, '<br>');
+                
+                console.log('✅ formatMarkdown: successfully formatted text');
+                return result;
+            } catch (error) {
+                console.error('❌ formatMarkdown error:', error);
+                return text; // Return original text if formatting fails
+            }
+        }
+
+        function downloadReport() {
+            if (!currentAnalysis) return;
+
+            const report = {
+                gist_url: currentAnalysis.gist_url,
+                summary: currentAnalysis.summary,
+                code_analysis: currentAnalysis.code_analysis,
+                technical_insights: currentAnalysis.technical_insights,
+                original_code: currentAnalysis.original_code,
+                generated_at: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gist-analysis-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 GitHub Gist Analyzer Initialized with pre-configured gist');
+            console.log('📋 Gist URL:', PREDEFINED_GIST_URL);
+            
+            // Test if all DOM elements are found
+            console.log('🔍 Checking DOM elements...');
+            console.log('✅ analyzeBtn:', analyzeBtn);
+            console.log('✅ loadingState:', loadingState);
+            console.log('✅ resultsSection:', resultsSection);
+            console.log('✅ errorState:', errorState);
+            console.log('✅ summaryContent:', summaryContent);
+            console.log('✅ codeAnalysis:', codeAnalysis);
+            console.log('✅ technicalInsights:', technicalInsights);
+            console.log('✅ originalCode:', originalCode);
+            console.log('✅ fileInfo:', fileInfo);
+            console.log('✅ downloadReportBtn:', downloadReportBtn);
+            console.log('✅ newAnalysisBtn:', newAnalysisBtn);
+            
+            // Test if checkboxes are found
+            const includeCodeCheckbox = document.getElementById('include-code');
+            const detailedAnalysisCheckbox = document.getElementById('detailed-analysis');
+            console.log('✅ include-code checkbox:', includeCodeCheckbox);
+            console.log('✅ detailed-analysis checkbox:', detailedAnalysisCheckbox);
+            
+            // Test fetch API
+            console.log('🧪 Testing fetch API...');
+            fetch('/')
+                .then(response => {
+                    console.log('✅ Fetch test successful, status:', response.status);
+                })
+                .catch(error => {
+                    console.error('❌ Fetch test failed:', error);
+                });
+        });
+    </script>
+</body>
+</html>
