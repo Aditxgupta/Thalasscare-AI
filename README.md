@@ -31,7 +31,7 @@ The application uses the following environment variables (already configured wit
 ### 3. Run the Application
 
 ```bash
-python app.py
+streamlit streamlits.py
 ```
 
 The application will start on `http://localhost:5000`
@@ -146,3 +146,4 @@ This project is part of the ThalassCare AI platform and is designed for blood do
 ## Support
 
 For support or questions, please refer to the project documentation or contact the development team.
+
